@@ -1,17 +1,42 @@
 ---
 - name: Deploy Calculator App
-  hosts: minikube
+  hosts: localhost
+  gather_facts: no
   tasks:
+    - name: Clone the repository
+      git:
+        repo: https://github.com/inam101001/Calculator.git
+        dest: /path/to/local/repo
+
+    - name: Build Docker image
+      docker_image:
+        name: calculator-app
+        source: build
+        path: /path/to/local/repo
+
+    - name: Tag Docker image
+      docker_image:
+        name: calculator-app
+        repository: your-dockerhub-username/calculator-app
+        tag: latest
+
+    - name: Push Docker image to Docker Hub
+      docker_login:
+        username: your-dockerhub-username
+        password: your-dockerhub-password # Use Ansible Vault to securely store this
+        registry_url: https://index.docker.io/v1/
+      docker_image:
+        name: your-dockerhub-username/calculator-app
+        push: yes
+
     - name: Apply Kubernetes deployment
-      become: yes
-      become_user: root
       k8s:
-        definition: calculator-deployment.yaml
+        definition: /path/to/calculator-deployment.yaml
         state: present
+      delegate_to: localhost
 
     - name: Apply Kubernetes service
-      become: yes
-      become_user: root
       k8s:
-        definition: calculator-service.yaml
+        definition: /path/to/calculator-service.yaml
         state: present
+      delegate_to: localhost
