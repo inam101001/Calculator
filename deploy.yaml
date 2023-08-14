@@ -1,0 +1,17 @@
+---
+- name: Deploy Calculator App
+  hosts: minikube
+  tasks:
+    - name: Apply Kubernetes deployment
+      become: yes
+      become_user: root
+      k8s:
+        definition: calculator-deployment.yaml
+        state: present
+
+    - name: Apply Kubernetes service
+      become: yes
+      become_user: root
+      k8s:
+        definition: calculator-service.yaml
+        state: present
