@@ -4,9 +4,8 @@ metadata:
   name: calculator-service
 spec:
   selector:
-    app: calculator
+    app: calculator-app
   ports:
     - protocol: TCP
       port: 80
       targetPort: 80
-  type: NodePort
