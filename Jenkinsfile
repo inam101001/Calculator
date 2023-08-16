@@ -1,44 +1,35 @@
-pipeline {
+pipeline{
+
     agent any
 
-    stages {
-        stage('Clone Repository') {
+    stages{
+        stage("Clone Code"){
             steps {
-                git branch: 'main', url: 'https://github.com/inam101001/Calculator.git'
-            }
-        }
-        
-        stage('Build Docker Image') {
-            steps {
-                script {
-                    docker.build("calculator-app")
+                echo "Cloning the code"
+                git url:"https://github.com/inam101001/Calculator.git" , branch: "main"
                 }
             }
-        }
-        
-        stage('Push Docker Image') {
+        stage("Build"){
+            steps { 
+                echo "Building the Image"
+                sh "docker build -t my-cal-app ."
+                }  
+            }
+        stage("Push to Docker Hub"){
             steps {
-                script {
-                    docker.withRegistry('https://index.docker.io/v1/', 'docker-hub-credentials') {
-                        dockerImage.push()
-                    }
+                echo "Pushing the image to docker hub"
+                withCredentials([usernamePassword(credentialsId:"DockerHub",usernameVariable:"dHubusername",passwordVariable:"dHubpassword")]){
+                sh "docker tag my-cal-app ${env.dHubusername}/my-cal-app:latest"
+                sh "docker login -u ${env.dHubusername} -p ${env.dHubpassword}"
+                sh "docker push ${env.dHubusername}/my-cal-app:latest"
                 }
+              }
             }
-        }
-
-        stage('Deploy to Minikube') {
+        stage("Deploy"){
             steps {
-                ansiblePlaybook(
-                    playbook: '/path/to/deploy.yml',
-                    inventory: '/path/to/inventory.ini'
-                )
+                echo "Deploying the Container"
+                sh "docker-compose down && docker-compose up -d"
             }
-        }
-    }
-
-    post {
-        always {
-            echo 'Pipeline completed'
         }
     }
 }
